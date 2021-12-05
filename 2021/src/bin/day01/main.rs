@@ -13,14 +13,12 @@ impl Puzzle for Part1 {
 
         let mut last :usize = 0;
         let mut result :usize = 0;
-        numbers.into_iter().for_each(
-            |n| {
-                if last > 0 && n > last {
-                    result += 1;
-                }
-                last = n;
+        numbers.into_iter().for_each(|n| {
+            if last > 0 && n > last {
+                result += 1;
             }
-        );
+            last = n;
+        });
 
         println!("{}", result)
     }
@@ -36,16 +34,16 @@ impl Puzzle for Part2 {
         let mut last :usize = 0;
         let mut result :usize = 0;
 
-        for (i, n) in numbers.iter().enumerate() {
-            if n + 2 >= len(numbers) {
-                return;
-            }
-            let sum = numbers[n] + numbers[n + 1] + numbers[n + 2]
+        for (i, _) in numbers.iter().enumerate() {
+            if i + 2 < numbers.len() {
+                let sum = numbers[i] + numbers[i + 1] + numbers[i + 2];
 
-            if last > 0 && numbers[n] > last {
-                result += 1;
-            }
-            last = i;
+                if last > 0 && sum > last {
+                    result += 1;
+                }
+                
+                last = sum;
+            }            
         }
 
         println!("{}", result)

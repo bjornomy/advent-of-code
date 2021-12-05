@@ -1,14 +1,4 @@
-#! /bin/sh
-
-day=$(date +'%d')
-
-path="$1/src/bin/day$day"
-mkdir -p $path
-
-touch $path/input.txt
-#touch $path/example.txt
-cat > $path/main.rs <<- EOM
-use advent_of_code_$1::puzzle::Puzzle;
+use advent_of_code_2021::puzzle::Puzzle;
 
 struct Part1;
 struct Part2;
@@ -37,4 +27,3 @@ fn main() {
     print!("Part 2: ");
     Part2::solve(INPUT); 
 }
-EOM
