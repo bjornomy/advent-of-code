@@ -8,7 +8,7 @@ mkdir -p $path
 touch $path/input.txt
 #touch $path/example.txt
 cat > $path/main.rs <<- EOM
-use advent_of_code_$1::puzzle::Puzzle;
+use advent_of_code_$1::puzzle::{self, Puzzle};
 
 struct Part1;
 struct Part2;
