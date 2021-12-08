@@ -6,7 +6,7 @@ path="$1/src/bin/day$day"
 mkdir -p $path
 
 touch $path/input.txt
-#touch $path/example.txt
+touch $path/example.txt
 cat > $path/main.rs <<- EOM
 use advent_of_code_$1::puzzle::{self, Puzzle};
 
