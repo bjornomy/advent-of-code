@@ -1,4 +1,4 @@
-use advent_of_code_2022::puzzle::Puzzle;
+use puzzle::puzzle::Puzzle;
 
 struct Part1;
 struct Part2;

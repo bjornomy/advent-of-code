@@ -1,5 +1,4 @@
-use std::ptr::hash;
-use advent_of_code_2022::puzzle::{self, Puzzle};
+use puzzle::puzzle::Puzzle;
 
 struct Part1;
 struct Part2;
