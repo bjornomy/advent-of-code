@@ -8,8 +8,10 @@ mkdir -p $path
 touch $path/input.txt
 touch $path/example.txt
 cat > $path/main.rs <<- EOM
-use puzzle::puzzle::Puzzle;
 
+trait Puzzle {
+    fn solve(input: &str);
+}
 struct Part1;
 struct Part2;
 
