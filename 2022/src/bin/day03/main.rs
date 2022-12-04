@@ -1,4 +1,3 @@
-use std::iter::repeat_with;
 
 trait Puzzle {
     fn solve(input: &str);
@@ -27,16 +26,28 @@ impl Puzzle for Part1 {
             .map(map_to_numbers)
             .map(|row| {
 
-                let mut left = &row[0..(row.len() / 2)];
-                let mut right = &row[(row.len() / 2)..];
+                let (l, r) = row.split_at(row.len() / 2);
+                let mut left = Vec::from(l);
+                let mut right = Vec::from(r);
+                left.sort();
+                right.sort();
 
                 let mut res :usize = 0;
+                let mut i :usize = 0;
+                let mut j :usize = 0;
 
-                for i in 0..left.len() {
-                    for j in 0..right.len() {
-                        if left[i] == right[j] {
-                            res = left[i]
-                        }
+                while i < left.len() && j < right.len() && res == 0 {
+
+                    if left[i] == right[j] {
+                        res = left[i]
+                    }
+
+                    if left[i] < right[j] {
+                        i += 1;
+                    }
+
+                    if left[i] > right[j] {
+                        j += 1;
                     }
                 }
 
@@ -53,44 +64,54 @@ impl Puzzle for Part2 {
     fn solve(input: &str) {
         let numbers :Vec<Vec<usize>> = input.split('\n').collect::<Vec<&str>>().into_iter()
             .map(map_to_numbers)
+            .map(|mut v| {
+                v.sort();
+                v
+            })
             .collect();
 
         let mut sum :usize = 0;
+        let mut i :usize = 0;
 
-        for i in 0..numbers.len() {
-            if (i + 1) % 3 == 0 {
+        while i < numbers.len()  {
 
-                let first = &numbers[i - 2];
-                let second = &numbers[i - 1];
-                let third = &numbers[i];
+            let first = &numbers[i];
+            let second = &numbers[i + 1];
+            let third = &numbers[i + 2];
 
-                let mut found :bool = false;
+            let mut found :bool = false;
+            let mut j :usize = 0;
+            let mut k :usize = 0;
+            let mut l :usize = 0;
 
-                for j in 0..first.len() {
-                    for k in 0..second.len() {
-                        if first[j] == second[k] { // if first and second are eq, we can check in third
-                            for l in 0..third.len() {
-                                if first[j] == third[l] {
-                                    sum += first[j];
-                                    found = true;
-                                    break
-                                }
-                            }
-                        }
+            while j < first.len() && k < second.len() && l < third.len() && !found {
+                //println!("R: {:?}, j: {:?}, k: {:?}, l: {:?}", i, j, k , l);
+                //println!("f: {:?}, s: {:?}, t: {:?}", first[j], second[k], third[l]);
 
-                        if found {
-                            break
-                        }
+                if first[j] < second[k] {
+                    j += 1;
+                }
+
+                if first[j] > second[k] {
+                    k += 1;
+                }
+
+                if first[j] == second[k] {
+                    while third[l] < first[j] && l < third.len() {
+                        l += 1;
                     }
 
-                    if found {
-                        break
+                    if first[j] == third[l] {
+                        sum += first[j];
+                        found = true;
+                    } else {
+                        // current match in first and second not found in third, advance
+                        j += 1;
                     }
                 }
-            } else {
-                // only process every 3 rows
-                continue
             }
+
+            i += 3;
         }
 
         println!("{:?}", sum)
