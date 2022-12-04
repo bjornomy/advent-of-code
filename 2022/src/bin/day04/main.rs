@@ -31,10 +31,6 @@ impl Pair {
     fn overlaps2(&self, other: &Pair) -> bool {
 
         let o = (self.end >= other.start && self.start <= other.end) || (other.end >= self.start && other.start <= self.start);
-
-        //740
-        //915
-
         println!("{:?} <-> {:?}, overlaps: {:?}", self, other, o);
         return o;
     }
