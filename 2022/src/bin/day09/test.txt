@@ -1,0 +1,16 @@
+U 2 up
+D 3 down
+U 1
+R 2 right
+L 3 left
+R 2
+U 2 diag ru
+R 2 diag ru
+D 1
+R 1 diag rd
+D 2 diag rd
+L 2 diag ld
+D 2 diag ld
+L 1
+U 3 diag lu
+L 2 diag lu
