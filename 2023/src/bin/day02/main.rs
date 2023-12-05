@@ -1,3 +1,4 @@
+use std::cmp::min;
 use std::num::ParseIntError;
 
 trait Puzzle {
@@ -12,8 +13,8 @@ type Draws = [usize; 3];
 type Game = (usize, Vec<Draws>);
 
 static MAX_RED: usize = 12;
-static MAX_BLUE: usize = 13;
-static MAX_GREEN: usize = 14;
+static MAX_BLUE: usize = 14;
+static MAX_GREEN: usize = 13;
 
 fn line_to_tuple(line: &str) -> Result<Game, ParseIntError> {
     let splits: Vec<&str> = line.split(':').collect();
@@ -49,32 +50,16 @@ fn line_to_tuple(line: &str) -> Result<Game, ParseIntError> {
 
 impl Puzzle for Part1 {
     fn solve(input: &str) {
-        let tuples: Vec<Result<Game, ParseIntError>> = input.lines()
+        let sum: usize = input.lines()
             .map(line_to_tuple)
-            .collect();
-
-        let ok_tuples: Vec<Result<Game, ParseIntError>> = tuples.clone().into_iter()
-            .filter(|t| t.is_ok())
-            .collect();
-
-        println!("T: {}", tuples.len());
-        println!("OK: {}", ok_tuples.len());
-
-        let sum: usize = tuples.into_iter()
             .filter(|o| {
                 if let Ok(t) = o {
-                    println!("D: {:?}", t);
                     t.1.iter().all(|d| d[0] <= MAX_RED && d[1] <= MAX_GREEN && d[2] <= MAX_BLUE)
                 } else {
                     false
                 }
             })
-            .map(Result::unwrap)
-            .map(|t| {
-                let g = t.0;
-                println!("I: {:?}", g);
-                g
-            })
+            .map(|t| t.unwrap().0)
             .sum();
 
         println!("{}", sum)
@@ -83,7 +68,30 @@ impl Puzzle for Part1 {
 
 impl Puzzle for Part2 {
     fn solve(input: &str) {
-        println!("NOT STARTED")
+        let sum: usize = input.lines()
+            .map(line_to_tuple)
+            .map(|t| {
+                let mut min: Draws = [0, 0, 0];
+                if let Ok(g) = t {
+                    g.1.iter().for_each(|d| {
+                        if d[0] > min[0] {
+                            min[0] = d[0]
+                        }
+                        if d[1] > min[1] {
+                            min[1] = d[1]
+                        }
+                        if d[2] > min[2] {
+                            min[2] = d[2]
+                        }
+                    });
+                }
+                // println!("{:?}", min);
+                min
+            })
+            .map(|mins| mins[0] * mins[1] * mins[2])
+            .sum();
+
+        println!("{}", sum)
     }
 }
 
@@ -91,12 +99,9 @@ const INPUT: &str = include_str!("input.txt");
 // const INPUT: &str = include_str!("example.txt");
 
 fn main() {
-    println!("Part 1:");
+    print!("Part 1: ");
     Part1::solve(INPUT);
 
     print!("Part 2: ");
     Part2::solve(INPUT);
 }
-
-// 1628 close? (<)
-// 1908 close? (<=)
