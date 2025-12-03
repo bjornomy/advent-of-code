@@ -11,11 +11,11 @@ enum DIR {
 }
 
 static START: i16 = 50;
-static MAX_DIAL: i16 = 99;
+static DIAL_SIZE: i16 = 100;
 
 type DialMoveResult = (i16, i16);
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct Move {
     dir: DIR,
     num_moves: i16,
@@ -49,7 +49,7 @@ fn parse_move(l: &str) -> Move {
             .expect("valid number");
         dir = DIR::RIGHT;
     } else {
-        !panic!("What?");
+        panic!("What?");
     }
 
     return Move {
@@ -58,96 +58,35 @@ fn parse_move(l: &str) -> Move {
     };
 }
 
-fn move_dial_2(loc: i16, m: Move) -> DialMoveResult {
-    println!(
-        "Moving dial {:?} {} steps from: {}",
-        m.dir, m.num_moves, loc
-    );
+fn move_dial(loc: i16, m: Move) -> DialMoveResult {
+    let steps_to_move = m.num_moves % DIAL_SIZE;
+    let full_revs = m.num_moves / DIAL_SIZE;
 
-    let mut revs = 0;
-    let mut calc = m.num_moves;
-    while calc > 100 {
-        calc -= 100;
-        revs += 1;
-    }
+    let new_pos = match m.dir {
+        DIR::LEFT => (loc - steps_to_move).rem_euclid(DIAL_SIZE),
+        DIR::RIGHT => (loc + steps_to_move).rem_euclid(DIAL_SIZE),
+    };
 
-    let mut next: i16;
-    let mut wrapped = false;
-    match m.dir {
-        DIR::LEFT => {
-            next = loc - calc;
-            if next < 0 {
-                next += 100;
-                wrapped = true;
-            }
-        }
-        DIR::RIGHT => {
-            next = loc + calc;
-            if next >= 100 {
-                next -= 100;
-                wrapped = true;
-            }
-        }
-    }
-
-    let mut wrap_zero_count = revs;
-    if wrapped {
-        wrap_zero_count += 1;
-    }
-
-    (next, wrap_zero_count)
-}
-
-fn _move_dial(loc: i16, dir: &DIR, num_moves: i16) -> DialMoveResult {
-    let actual_change = num_moves % MAX_DIAL;
-
-    let revs;
-    if num_moves == MAX_DIAL && loc == MAX_DIAL {
-        revs = 0;
+    // Count partial wrap/hit in the remainder (only when remainder > 0)
+    let partial_wrap = if steps_to_move == 0 {
+        0i16
     } else {
-        revs = num_moves / MAX_DIAL
-    }
-
-    let mut wrap_zero_count = revs;
-
-    println!(
-        "Moving dial {:?} {} steps from: {}, change: {}, revs: {}",
-        dir, num_moves, loc, actual_change, revs
-    );
-
-    let mut computed = loc;
-
-    match dir {
-        DIR::LEFT => {
-            computed -= actual_change;
-            computed += revs;
+        match m.dir {
+            DIR::LEFT => {
+                // don't count if we started at 0
+                if loc != 0 {
+                    // either we wrapped (new_pos > loc) OR we landed exactly on 0
+                    ((new_pos > loc) || (new_pos == 0)) as i16
+                } else {
+                    0i16
+                }
+            }
+            // RIGHT: we wrapped if new_pos < loc (this already covers new_pos == 0 except when loc == 0)
+            DIR::RIGHT => (new_pos < loc) as i16,
         }
-        DIR::RIGHT => {
-            computed += actual_change;
-            computed -= revs;
-        }
-    }
+    };
 
-    let mut wrapped = false;
-    if computed < 0 {
-        computed += MAX_DIAL + 1;
-        // println!("Passed 0, adding. New computed: {}", computed);
-        wrapped = true;
-    } else if computed > MAX_DIAL {
-        computed -= MAX_DIAL + 1;
-        // println!("Passed 99, subtracing. New loc: {}", computed)
-        wrapped = true;
-    } else {
-        // println!("ended at loc: {}", computed);
-    }
-
-    if loc != 0 && wrapped {
-        wrap_zero_count += 1;
-    }
-
-    println!("Wrapped 0: {}", wrap_zero_count);
-
-    return (computed, wrap_zero_count);
+    (new_pos, full_revs + partial_wrap)
 }
 
 impl Puzzle for Part1 {
@@ -157,7 +96,7 @@ impl Puzzle for Part1 {
 
         input.lines().for_each(|l| {
             let m = parse_move(l);
-            let r = move_dial_2(loc, m);
+            let r = move_dial(loc, m);
             loc = r.0;
 
             if loc == 0 {
@@ -177,20 +116,9 @@ impl Puzzle for Part2 {
 
         input.lines().for_each(|l| {
             let m = parse_move(l);
-            let orig = loc;
-            let r = move_dial_2(loc, m.clone());
+            let r = move_dial(loc, m);
             loc = r.0;
 
-            if m.dir == DIR::LEFT {
-                if r.0 == 0 && r.1 > 1 {
-                    count += 1;
-                }
-                if orig == 0 {
-                    count -= 1;
-                }
-            }
-
-            println!("Cur wrap: {}, adding: {}", count, r.1);
             count += r.1;
         });
 
@@ -216,89 +144,89 @@ mod tests {
     #[test]
     fn move_dial_test() {
         let mut pos;
-        let r = move_dial_2(50, Move::new(DIR::LEFT, 68));
+        let r = move_dial(50, Move::new(DIR::LEFT, 68));
         pos = r.0;
         assert_eq!(pos, 82);
         assert_eq!(r.1, 1);
 
-        let r = move_dial_2(pos, Move::new(DIR::LEFT, 30));
+        let r = move_dial(pos, Move::new(DIR::LEFT, 30));
         pos = r.0;
         assert_eq!(pos, 52);
         assert_eq!(r.1, 0);
 
-        let r = move_dial_2(pos, Move::new(DIR::RIGHT, 48));
+        let r = move_dial(pos, Move::new(DIR::RIGHT, 48));
         pos = r.0;
         assert_eq!(pos, 0);
         assert_eq!(r.1, 1);
 
-        let r = move_dial_2(pos, Move::new(DIR::RIGHT, 200));
+        let r = move_dial(pos, Move::new(DIR::RIGHT, 200));
         pos = r.0;
         assert_eq!(pos, 0);
         assert_eq!(r.1, 2);
 
-        let r = move_dial_2(pos, Move::new(DIR::LEFT, 200));
+        let r = move_dial(pos, Move::new(DIR::LEFT, 200));
         pos = r.0;
         assert_eq!(pos, 0);
         assert_eq!(r.1, 2);
 
-        let r = move_dial_2(pos, Move::new(DIR::RIGHT, 50));
+        let r = move_dial(pos, Move::new(DIR::RIGHT, 50));
         pos = r.0;
         assert_eq!(pos, 50);
         assert_eq!(r.1, 0);
 
-        let r = move_dial_2(pos, Move::new(DIR::RIGHT, 274));
+        let r = move_dial(pos, Move::new(DIR::RIGHT, 274));
         pos = r.0;
         assert_eq!(pos, 24);
         assert_eq!(r.1, 3);
 
-        let r = move_dial_2(pos, Move::new(DIR::LEFT, 824));
+        let r = move_dial(pos, Move::new(DIR::LEFT, 824));
         pos = r.0;
         assert_eq!(pos, 0);
         assert_eq!(r.1, 8);
 
-        let r = move_dial_2(pos, Move::new(DIR::LEFT, 99));
+        let r = move_dial(pos, Move::new(DIR::LEFT, 99));
         pos = r.0;
         assert_eq!(pos, 1);
         assert_eq!(r.1, 1);
 
-        let r = move_dial_2(99, Move::new(DIR::LEFT, 99));
+        let r = move_dial(99, Move::new(DIR::LEFT, 99));
         assert_eq!(r.0, 0);
         assert_eq!(r.1, 0);
 
-        let r = move_dial_2(0, Move::new(DIR::LEFT, 99 * 3));
+        let r = move_dial(0, Move::new(DIR::LEFT, 99 * 3));
         assert_eq!(r.0, 3);
         assert_eq!(r.1, 3);
 
-        let r = move_dial_2(0, Move::new(DIR::RIGHT, 99 * 3));
+        let r = move_dial(0, Move::new(DIR::RIGHT, 99 * 3));
         assert_eq!(r.0, 97);
         assert_eq!(r.1, 2);
     }
 
     #[test]
     fn find_revs() {
-        let r = move_dial_2(50, Move::new(DIR::LEFT, 450));
+        let r = move_dial(50, Move::new(DIR::LEFT, 450));
         assert_eq!(r.0, 0);
         assert_eq!(r.1, 4);
 
         let t = r.1 + 1;
         assert_eq!(5, t);
 
-        let r = move_dial_2(50, Move::new(DIR::RIGHT, 450));
+        let r = move_dial(50, Move::new(DIR::RIGHT, 450));
         assert_eq!(r.0, 0);
         assert_eq!(r.1, 5);
 
         let t = r.1;
         assert_eq!(5, t);
 
-        let r = move_dial_2(89, Move::new(DIR::RIGHT, 11));
+        let r = move_dial(89, Move::new(DIR::RIGHT, 11));
         assert_eq!(r.0, 0);
         assert_eq!(r.1, 1);
 
-        let r = move_dial_2(0, Move::new(DIR::LEFT, 2));
+        let r = move_dial(0, Move::new(DIR::LEFT, 2));
         assert_eq!(r.0, 98);
         assert_eq!(r.1, 1);
 
-        let r = move_dial_2(50, Move::new(DIR::RIGHT, 1000));
+        let r = move_dial(50, Move::new(DIR::RIGHT, 1000));
         assert_eq!(r.0, 50);
         assert_eq!(r.1, 10);
     }
